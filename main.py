@@ -2,6 +2,7 @@ from PIL import Image, ImageDraw
 from utils import log
 import numpy as np
 
+RADIUS = 512
 NUM_NAILS = 10  # Number of nails around the circumference
 IMAGE_PATH = "/Users/neshpatel/Downloads/image.png"
 
@@ -32,10 +33,11 @@ def crop_image(image: Image) -> Image:
     return result
 
 
-def get_circle_points(num_points: int, radius: int) -> list[tuple[int, int]]:
+def get_circle_points(num_points: int, radius: int) -> np.ndarray:
     c_x, c_y = radius, radius
 
-    points = []
+    x_array = []
+    y_array = []
     for i in range(num_points):
         x = int(c_x + radius * np.cos(2 * np.pi * i / num_points))
         y = int(c_y + radius * np.sin(2 * np.pi * i / num_points))
@@ -47,18 +49,13 @@ def get_circle_points(num_points: int, radius: int) -> list[tuple[int, int]]:
         if y == radius * 2:
             y -= 1
 
-        points.append((x, y))
-    return points
+        x_array.append(x)
+        y_array.append(y)
+
+    return np.column_stack((np.array(x_array), np.array(y_array)))
 
 
-def plot_circle(radius: int, points: list[tuple[int, int]]) -> np.array:
-    array = np.zeros((radius * 2, radius * 2), dtype=np.uint8)
-    for x, y in points:
-        array[y, x] = 1
-    return array
-
-
-def plot_line(array: np.array, p0: tuple[int, int], p1: tuple[int, int]) -> np.array:
+def get_line_points(p0: tuple[int, int], p1: tuple[int, int]) -> np.ndarray:
     num_points = max(abs(p1[0] - p0[0]), abs(p1[1] - p0[0]))
     x = np.linspace(p0[0], p1[0], num_points)
     y = np.linspace(p0[1], p1[1], num_points)
@@ -66,9 +63,18 @@ def plot_line(array: np.array, p0: tuple[int, int], p1: tuple[int, int]) -> np.a
     x = np.round(x).astype(int)
     y = np.round(y).astype(int)
 
-    array[y, x] = 1
+    return np.column_stack((x, y))
 
-    return array
+
+def plot_points(size: int, points: np.ndarray) -> np.array:
+    matrix = np.zeros((size, size), dtype=np.uint8)
+    matrix[points[:, 1], points[:, 0]] = 1
+    return matrix
+
+
+def overlay_points(base: np.array, points: np.ndarray) -> np.array:
+    base[points[:, 1], points[:, 0]] = 1
+    return base
 
 
 def plot_all_lines():
@@ -77,19 +83,20 @@ def plot_all_lines():
     image = load_grayscale_image()
     radius = int(image.size[0] / 2)
     points = get_circle_points(NUM_NAILS, int(radius))
+    matrix = plot_points(radius * 2, points)
 
-    array = plot_circle(radius, points)
     for p0 in points:
         for p1 in points:
-            if p0 != p1:
-                array = plot_line(array, p0, p1)
-    image = to_image(array)
+            if not np.array_equal(p0, p1):
+                line_points = get_line_points(p0, p1)
+                matrix = overlay_points(matrix, line_points)
+
+    image = to_image(matrix)
     image.show()
 
 
 def main():
-    pass
-    
+    plot_all_lines()
     
 
 if __name__ == '__main__':
