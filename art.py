@@ -1,12 +1,14 @@
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageOps
 from utils import log
 from itertools import combinations
 
 
-def load_grayscale_image(path: str) -> np.array:
+def load_and_process_image(path: str) -> np.array:
     image = Image.open(path)
-    return image.convert("L")  # Convert to grayscale
+    image = image.convert("L")  # Convert to grayscale
+    image = ImageOps.invert(image)
+    return crop_image(image)
 
 
 def to_matrix(image: Image) -> np.array:
@@ -21,6 +23,7 @@ def to_image(array: np.array) -> Image:
 
 
 def crop_image(image: Image) -> Image:
+    """Crops image to a circle."""
     image = image.convert("RGBA")
     mask = Image.new('L', image.size, 0)
     draw = ImageDraw.Draw(mask)
