@@ -1,7 +1,9 @@
 import numpy as np
-from PIL import Image, ImageDraw, ImageOps
-from utils import log
 from itertools import combinations
+from PIL import Image, ImageDraw, ImageOps
+from tqdm import tqdm
+
+from utils import log, np_in_array, get_output_path
 
 WEIGHT = 0.2
 
@@ -107,3 +109,71 @@ def plot_all_lines(num_points: int, radius: int):
 
     image = to_image(matrix)
     image.show()
+
+
+def compute_line_error(
+    p0: np.array,
+    p1: np.array,
+    target: np.array,
+    current: np.array,
+) -> tuple[np.array, float]:
+    line = get_line_points(p0, p1)
+    A = overlay_points(current.copy(), line)
+    error = np.sum((target - A) ** 2)
+    return line, error
+
+
+def find_best_line(
+    target: np.array,
+    current: np.array,
+    p0: np.array,
+    possible_points: list[np.array],
+) -> tuple[np.array, float]:
+    best_line = None
+    lowest_error = float("inf")
+
+    for p1 in possible_points:
+        line, error = compute_line_error(p0, p1, target, current)
+        if error < lowest_error:
+            lowest_error = error
+            best_line = line
+    return best_line, lowest_error
+
+
+def gen_string_art(
+    image_path: str,
+    num_points: int,
+    num_lines: int,
+) -> Image:
+    image = load_and_process_image(image_path)
+    I = to_matrix(image)  # Image Matrix
+    size = I.shape[0]
+    radius = int(size / 2)
+
+    pin_points = get_circle_points(num_points, radius)
+    canvas = plot_points(size, pin_points)
+    
+    log.newline()
+    log.info("Plotting all lines...")
+    log.newline()
+    
+    best_line = None
+    for _ in tqdm(range(num_lines)):
+        if best_line is None:  # First run
+            p0 = pin_points[0]  # Start arbitrarily, waste of compute finding the optimal
+            used_pins = [p0]
+        else:
+            p0 = best_line[-1]
+            used_pins = [best_line[0], p0]
+
+        possible_points = [p for p in pin_points if not np_in_array(p, used_pins)]
+        best_line, _ = find_best_line(I, canvas.copy(), p0, possible_points)
+        if best_line is None:
+            break
+        overlay_points(canvas, best_line)
+
+    canvas = 1 - canvas  # Invert image
+    image = to_image(canvas)
+    image = image.convert('RGB')
+    image.save(get_output_path(image_path))
+    return image

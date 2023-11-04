@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+import os
 import types
 from typing import Optional
 
@@ -143,3 +144,9 @@ def np_in_array(
         if np.array_equal(element, candidate_array):
             return True
     return False
+
+def get_output_path(input_path: str) -> str:
+    dirname = os.path.dirname(input_path)
+    filename = os.path.basename(input_path)
+    filename = filename.split('.')[0] + '_string.png'
+    return f"{dirname}/{filename}"
