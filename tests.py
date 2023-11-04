@@ -150,5 +150,15 @@ class TestGeometry(unittest.TestCase):
         self.assertEqual(len(line_points), expected)
         self.assertTrue(np.array_equal(line_points[20], expected_line))
 
+    def test_pinv(self):
+        x = np.array([-1.3, -0.9, -0.3, 0.3, 0.7, 1.3])
+        y = np.array([-0.4, 0.4, 0.6, 1.5, 2.0, 2.1])
+
+        A = np.array([np.ones(len(x)), x])
+        A = np.column_stack([np.ones(len(x)), x])
+        X = np.linalg.pinv(A) @ y
+        self.assertEqual(round(X[0], 8), 1.06607143)
+        self.assertAlmostEqual(round(X[1], 8), 0.98214286)
+
 if __name__ == '__main__':
     unittest.main()

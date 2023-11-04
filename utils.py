@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 import types
 from typing import Optional
 
@@ -133,3 +134,12 @@ def create_logger(name: str, log_file: Optional[str] = None):
     return logger
 
 log = create_logger("String Art")
+
+def np_in_array(
+    element: np.array, 
+    list_of_arrays: np.array,
+) -> bool:
+    for candidate_array in list_of_arrays:
+        if np.array_equal(element, candidate_array):
+            return True
+    return False

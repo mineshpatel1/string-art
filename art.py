@@ -3,6 +3,7 @@ from PIL import Image, ImageDraw, ImageOps
 from utils import log
 from itertools import combinations
 
+WEIGHT = 0.2
 
 def load_and_process_image(path: str) -> np.array:
     image = Image.open(path)
@@ -66,14 +67,23 @@ def get_line_points(p0: tuple[int, int], p1: tuple[int, int]) -> np.array:
     return np.column_stack((x, y))
 
 
-def plot_points(size: int, points: np.array) -> np.array:
-    matrix = np.zeros((size, size), dtype=np.uint8)
-    matrix[points[:, 1], points[:, 0]] = 1
+def plot_points(
+    size: int,
+    points: np.array,
+    weight: float = WEIGHT,
+) -> np.array:
+    matrix = np.zeros((size, size), dtype=np.float64)
+    matrix[points[:, 1], points[:, 0]] = weight
     return matrix
 
 
-def overlay_points(base: np.array, points: np.array) -> np.array:
-    base[points[:, 1], points[:, 0]] = 1
+def overlay_points(
+    base: np.array,
+    points: np.array,
+    weight: float = WEIGHT,
+) -> np.array:
+    np.add.at(base, (points[:, 1], points[:, 0]), weight)
+    np.clip(base, 0, 1, out=base)
     return base
 
 
