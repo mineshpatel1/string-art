@@ -166,7 +166,7 @@ def gen_string_art(
             p0 = best_line[-1]
             used_pins = [best_line[0], p0]
 
-        possible_points = [p for p in pin_points if not np_in_array(p, used_pins)]
+        possible_points = np.array([p for p in pin_points if not np_in_array(p, used_pins)])
         best_line, _ = find_best_line(I, canvas.copy(), p0, possible_points)
         if best_line is None:
             break

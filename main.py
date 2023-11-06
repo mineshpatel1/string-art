@@ -1,8 +1,8 @@
 import art
 
-N = 128  # Number of nails around the circumference
+N = 300  # Number of nails around the circumference
 IMAGE_PATH = ""
-NUM_LINES = 100  # Number of lines to draw
+NUM_LINES = 2000  # Number of lines to draw
 
 
 def main():
